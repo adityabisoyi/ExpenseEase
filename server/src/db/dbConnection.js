@@ -10,6 +10,7 @@ const dbConnect = async () => {
             "MongoDB connected !!! Host : ",
             dbConnection.connection.host
         );
+        // console.log(process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_SECRET, process.env.CLOUDINARY_API_KEY)
     } catch (error) {
         console.log("MongoDB connection error : ", error);
         process.exit(1);
