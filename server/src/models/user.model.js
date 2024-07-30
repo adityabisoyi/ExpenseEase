@@ -21,12 +21,6 @@ const userSchema = mongoose.Schema(
             required: true,
             default: "String link", //default image
         },
-        accounts: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Account",
-            },
-        ],
         password: {
             type: String,
             required: true,
@@ -41,7 +35,7 @@ const userSchema = mongoose.Schema(
 );
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return true;
+    if (!this.isModified("password")) return next();
 
     this.password = await bcrypt.hash(this.password, 10);
     next();
@@ -56,7 +50,7 @@ userSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            fullName: this.fullName,
+            fullname: this.fullname,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Account } from "./account.model";
 
 const transactionSchema = mongoose.Schema(
     {
@@ -14,15 +15,18 @@ const transactionSchema = mongoose.Schema(
             type: Number,
             required: true,
         },
-        accountNumber: {
+        accountId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Account",
         },
         type: {
             type: String,
-            enum: ["Recurring", "One-time"],
-            required: true,
-            default: "One-time",
+            enum: ["Income", "Expense"],
+            required: true
+        },
+        isRecurring: {
+            type: Boolean,
+            default: false,
         },
         category: {
             type: String,
@@ -33,5 +37,18 @@ const transactionSchema = mongoose.Schema(
         timestamps: true,
     }
 );
+
+transactionSchema.post("save", async function(next) {
+    if(!this.isModified("amount")) return next();
+
+    const account = await Account.findbyId(this.accountId)
+
+    account.balance += this.amount;
+    await account.save({
+        validateBeforeSave: false,
+    })
+
+    next()
+})
 
 export const Transaction = mongoose.model("Transaction", transactionSchema);
