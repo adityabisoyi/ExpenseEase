@@ -2,17 +2,32 @@ import mongoose, { mongo } from "mongoose";
 
 const frequencySchema = mongoose.Schema(
     {
-        transactionId: {
+        amount: {
+            type: Number,
+            required: true
+        },
+        title: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+        },
+        accountId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Transaction",
+            ref: "Account"
         },
         renewPeriod: {
-            type: Number,
+            type: String,
             required: true,
         },
         isActive: {
             type: Boolean,
             default: true,
+        },
+        category: {
+            type: String,
+            required: true,
         },
         nextRenew: {
             type: Date,

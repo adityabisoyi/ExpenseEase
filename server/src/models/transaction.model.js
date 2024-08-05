@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Account } from "./account.model";
+import { Account } from "./account.model.js";
 
 const transactionSchema = mongoose.Schema(
     {
@@ -9,7 +9,6 @@ const transactionSchema = mongoose.Schema(
         },
         description: {
             type: String,
-            required: true,
         },
         amount: {
             type: Number,
@@ -19,14 +18,14 @@ const transactionSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Account",
         },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
         type: {
             type: String,
             enum: ["Income", "Expense"],
             required: true
-        },
-        isRecurring: {
-            type: Boolean,
-            default: false,
         },
         category: {
             type: String,
@@ -38,17 +37,17 @@ const transactionSchema = mongoose.Schema(
     }
 );
 
-transactionSchema.post("save", async function(next) {
-    if(!this.isModified("amount")) return next();
-
-    const account = await Account.findbyId(this.accountId)
-
-    account.balance += this.amount;
+transactionSchema.post("save", async function (doc) {
+    const account = await Account.findById(this.accountId)
+    if(this.type === "Income") {
+        account.balance += this.amount;
+    } else {
+        account.balance -= this.amount
+    }
     await account.save({
         validateBeforeSave: false,
-    })
+    });
+});
 
-    next()
-})
 
 export const Transaction = mongoose.model("Transaction", transactionSchema);

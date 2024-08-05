@@ -5,7 +5,10 @@ import {
     validatePassword,
 } from "../utils/validation.js";
 import { apiError } from "../utils/apiError.js";
-import { uploadFile } from "../utils/fileUpload.js";
+import { 
+    uploadFile, 
+    deleteFile 
+} from "../utils/uploadFile.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import fs from "fs";
 import jwt from "jsonwebtoken";
@@ -289,13 +292,77 @@ const updatePassword = async (req, res) => {
 
 
 const getUser = async(req, res) => {
-    return res.status(200).json(
-        new apiError(
-            200,
-            req.user,
-            "User data"
+    try {
+        return res.status(200).json(
+            new apiResponse(
+                200,
+                req.user,
+                "User data"
+            )
         )
-    )
+    } catch (error) {
+        return res.status(error.code || 500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+
+const updateAvatar = async (req, res) => {
+    try {
+        // console.log(req.file)
+        const avatarPath = req.file?.path
+    
+        if(!avatarPath) {
+            return res.status(400).json(
+                new apiError(400, "Please upload image")
+            )
+        }    
+
+        const avatar = await uploadFile(avatarPath)
+
+        if(!avatar) {
+            return res.status(500).json(
+                new apiError(500, "Upload failed please try again")
+            )
+        }
+
+        const getOldAvatar = await User.findById(req.user._id)
+
+        const deleteResponse = await deleteFile(getOldAvatar.avatar)
+
+        if(!deleteResponse) {
+            return res.status(500).json(
+                new apiError(500, "Profle deletion failed deletion failed")
+            )
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set:{
+                    avatar: avatar.url
+                }
+            },
+            {new: true}
+        ).select("-password")
+
+        return res.status(200).json(
+            new apiResponse(
+                200, 
+                user, 
+                "Profile photo updated successfully"
+            )
+        )
+
+    } catch (error) {
+        return res.status(error.code || 500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+    
 }
 
 
@@ -305,6 +372,7 @@ export {
     logoutUser,
     renewAccessToken, 
     updatePassword,
-    getUser
+    getUser,
+    updateAvatar
 };
 
